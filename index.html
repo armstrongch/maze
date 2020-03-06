@@ -9,23 +9,111 @@
 		<meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width, user-scalable=no" />
 	</head>
 	<body onload="startGame()">
-		<p id="infoDiv"></p>
-		<div id="imageDiv"></div>
-		<div id="choiceDiv"></div>
-		
+		<canvas id="gameCanvas" width="0" height="0"></canvas>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>
 		<script type="text/javascript">	
 			
-			function startGame()
+			var tilePositions = 
 			{
-				
+				T: 				{x:0,y:1}, //Tree
+				E:				{x:0,y:0} //Empty
 			}
 			
-			var testMap = [
-				["00", "01", "02"], 
-				["10", "11", "12"], 
-				["11", "21", "22"]
-			];
+			var tileMapImg = new Image();
+			tileMapImg.src = "tileset.png";
+			var gameCanvas = document.getElementById("gameCanvas");
+			var ctx = gameCanvas.getContext("2d");
+			var chunkSize = 7;
+			var chunksPerMap = 3;
+			var mapSize = chunkSize * chunksPerMap;
+			var tileSize = 32;
+			var map;
+			
+			function randomMazeChunk()
+			{
+				var randInt = Math.floor(Math.random()*10);
+				switch(randInt)
+				{
+					default:
+						return [
+							["T", "T", "T", "E", "T", "T", "T"],
+							["T", "E", "E", "E", "E", "E", "T"],
+							["T", "E", "E", "E", "E", "E", "T"],
+							["E", "E", "E", "E", "E", "E", "E"],
+							["T", "E", "E", "E", "E", "E", "T"],
+							["T", "E", "E", "E", "E", "E", "T"],
+							["T", "T", "T", "E", "T", "T", "T"]
+						];
+				}
+			}
+			
+			function generateMap(type)
+			{
+				switch(type)
+				{
+					default:
+					case "random maze":
+						
+						var arrayOfChunks = [];
+						for (let i = 0; i < chunksPerMap; i++)
+						{
+							var rowOfChunks = [];
+							for (let j = 0; j < chunksPerMap; j++)
+							{
+								var chunk = randomMazeChunk();
+								rowOfChunks.push(chunk);
+							}
+							arrayOfChunks.push(rowOfChunks);		
+						}
+						
+						var maze = [];
+						for (let i = 0; i < arrayOfChunks.length * arrayOfChunks[0][0].length; i++)
+						{
+							var mazeRow = [];
+							for (let j = 0; j < arrayOfChunks[0].length * arrayOfChunks[0][0][0].length; j++)
+							{
+								var row = Math.floor(i/chunkSize);
+								var col = Math.floor(j/chunkSize);
+								var chunkRow = i%chunkSize;
+								var chunkCol = j%chunkSize;
+								mazeRow.push(arrayOfChunks[row][col][chunkRow][chunkCol]);
+							}
+							maze.push(mazeRow);
+						}
+						
+						return maze;
+				}
+			}
+			
+			function startGame()
+			{
+				gameCanvas.width = mapSize*tileSize;
+				gameCanvas.height = mapSize*tileSize;
+				
+				map = generateMap("random maze");
+				drawCanvas(map);
+			}
+			
+			function drawCanvas(map)
+			{
+				for (let i = 0; i < map.length; i++)
+				{
+					for (let j = 0; j < map[0].length; j++)
+					{
+						ctx.drawImage(
+							tileMapImg,
+							tilePositions[map[i][j]].x*(tileSize + 2),
+							tilePositions[map[i][j]].y*(tileSize + 2),
+							tileSize, tileSize,
+							i*tileSize,
+							j*tileSize,
+							tileSize, tileSize
+						);
+					}
+				}
+			}
+			
+			
 			
 			function shuffle(array) { //from: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
 				var currentIndex = array.length, temporaryValue, randomIndex;
