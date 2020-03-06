@@ -15,8 +15,19 @@
 			
 			var tilePositions = 
 			{
-				T: 				{x:0,y:1}, //Tree
-				E:				{x:0,y:0} //Empty
+				Tree1: 				{x:0,y:1},
+				Tree2: 				{x:1,y:1},
+				Tree3: 				{x:2,y:1},
+				Tree4: 				{x:3,y:1},
+				Tree5: 				{x:4,y:1},
+				Tree6: 				{x:5,y:1},
+				Tree7: 				{x:0,y:2},
+				Tree8: 				{x:1,y:2},
+				Tree9: 				{x:2,y:2},
+				Tree10: 			{x:3,y:2},
+				Tree0: 				{x:4,y:2},
+				
+				Empty:				{x:0,y:0}
 			}
 			
 			var tileMapImg = new Image();
@@ -88,8 +99,21 @@
 					var row = [];
 					for (let j = 0; j < chunkSize; j++)
 					{
-						row.push(bs.charAt(0));
+						var c = bs.charAt(0);
 						bs = bs.substring(1);
+						switch(c)
+						{
+							case "E":
+								row.push("Empty");
+								break;
+							case "T":
+								var randInt = Math.floor(Math.random() * 11);
+								row.push("Tree" + randInt);
+								break;
+							default:
+								row.push("Empty");
+								break;
+						}
 					}
 					chunk.push(row);
 				}
