@@ -32,7 +32,34 @@
 				
 				Monster:			{x:24, y:5},
 				
+				Scorpian:			{x:24, y:5},
+				Ghost:				{x:26, y:6},
+				Skeleton:			{x:29, y:6},
+				Ogre:				{x:30, y:6},
+				Squid:				{x:25, y:8},
+				Crocodile:			{x:29, y:8},
+				Bear:				{x:30, y:8},
+				Knight:				{x:31, y:0},
+				
 				Empty:				{x:0, y:0}
+			}
+			
+			var monsterNames = [
+					"Scorpian",
+					"Ghost",
+					"Skeleton",
+					"Ogre",
+					"Squid",
+					"Crocodile",
+					"Bear",
+					"Knight"
+				];
+			
+			function generateMonsterName()
+			{
+				var randInt = Math.floor(Math.random() * monsterNames.length);
+				console.log(monsterNames[randInt]);
+				return monsterNames[randInt];
 			}
 			
 			var tileMapImg = new Image();
@@ -49,7 +76,7 @@
 			var emptySpaceBagIndex = 0;
 			
 			var playerTurn = true;
-			var GameTurn = false;
+			var monsterTurn = false;
 			
 			var playerX = Math.floor(mapSize/2);
 			var playerY = Math.floor(mapSize/2);
@@ -162,7 +189,7 @@
 								row.push("Player");
 								break;
 							case "M":
-								row.push("Monster");
+								row.push(generateMonsterName());
 								break;
 							default:
 								row.push("Empty");
@@ -180,7 +207,6 @@
 				{
 					default:
 					case "random maze":
-						
 						var arrayOfChunks = [];
 						for (let i = 0; i < chunksPerMap; i++)
 						{
@@ -257,25 +283,27 @@
 				
 				emptySpaceBag = shuffle(emptySpaceBag);
 				
-				setInterval(gameLoop, 300);
-				
 				document.addEventListener('keydown', (e) => 
 					{
-						if (e.code === "ArrowUp")
+						if (playerTurn)
 						{
-							movePlayer(-1, 0);
-						}
-						else if (e.code === "ArrowDown")
-						{
-							movePlayer(1, 0);
-						}
-						else if (e.code === "ArrowLeft")
-						{
-							movePlayer(0, -1);
-						}
-						else if (e.code === "ArrowRight")
-						{
-							movePlayer(0, 1);
+							if (e.code === "ArrowUp")
+							{
+								movePlayer(-1, 0);
+							}
+							else if (e.code === "ArrowDown")
+							{
+								movePlayer(1, 0);
+							}
+							else if (e.code === "ArrowLeft")
+							{
+								movePlayer(0, -1);
+							}
+							else if (e.code === "ArrowRight")
+							{
+								movePlayer(0, 1);
+							}
+							gameTurn();
 						}
 					}
 				);
@@ -335,9 +363,75 @@
 				drawCanvas(map);
 			}
 			
-			function gameLoop()
+			function gameTurn()
 			{
-				//console.log("TEST");
+				for (let i = 0; i < map.length; i++)
+				{
+					for (let j = 0; j < map[i].length; j++)
+					{
+						var mapEntity = map[i][j];
+						if (monsterNames.includes(mapEntity))
+						{
+							moveMonster(mapEntity, i, j);
+						}
+					}
+				}
+				drawCanvas(map);
+			}
+			
+			/*function evaluateTargetSpace(i, j)
+			{
+				var distanceFromPlayer = Math.sqrt((i - playerY)*(i - playerY) + (j - playerX)*(j - playerX));
+				
+			}*/
+			
+			function moveMonster(mapEntity, i, j)
+			{
+				var targetSpaces = [];
+				switch(mapEntity)
+				{
+					default: //move randomly
+						targetSpaces.push([i-1, j]);
+						targetSpaces.push([i+1, j]);
+						targetSpaces.push([i, j+1]);
+						targetSpaces.push([i, j-1]);
+						break;
+				}
+				targetSpaces = shuffle(targetSpaces);
+				
+				var new_i = i;
+				var new_j = j;
+				
+				for (let x = 0; x < targetSpaces.length; x++)
+				{
+					targetI = targetSpaces[x][0];
+					if (targetI < 0)
+					{
+						targetI += map.length;
+					}
+					else if (targetI >= map.length)
+					{
+						targetI -= map.length;
+					}
+					targetJ = targetSpaces[x][1];
+					if (targetJ < 0)
+					{
+						targetJ += map.length;
+					}
+					else if (targetJ >= map.length)
+					{
+						targetJ -= map.length;
+					}
+					var targetSpaceContents = map[targetI][targetJ]
+					if ((targetSpaceContents == "Empty")
+					|| (targetSpaceContents == "Coin")
+					|| (targetSpaceContents == "Chest"))
+					{
+						map[targetI][targetJ] = mapEntity + "*"; //already moved
+						map[i][j] = targetSpaceContents;
+						x = targetSpaces.length;
+					}
+				}
 			}
 			
 			function drawCanvas(map)
@@ -346,6 +440,10 @@
 				{
 					for (let j = 0; j < map[0].length; j++)
 					{
+						if (map[i][j].includes("*"))
+						{
+							map[i][j] = map[i][j].substr(0, map[i][j].length - 1);
+						}
 						ctx.drawImage(
 							tileMapImg,
 							tilePositions[map[i][j]].x*(tileSize + 2),
