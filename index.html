@@ -30,6 +30,8 @@
 				
 				Player:				{x:31, y:1},
 				
+				Monster:			{x:24, y:5},
+				
 				Empty:				{x:0, y:0}
 			}
 			
@@ -48,6 +50,11 @@
 			
 			var playerTurn = true;
 			var GameTurn = false;
+			
+			var playerX = Math.floor(mapSize/2);
+			var playerY = Math.floor(mapSize/2);
+			
+			var numCoins = 0;
 			
 			var emptyRoom_bitString = "TTTTETTTTTEEEEEEETTEEEEEEETTEEEEEEETEEEEEEEEETEEEEEEETTEEEEEEETTEEEEEEETTTTTETTTT";
 			var target_bitStrip = "TTTTETTTTTEEEEEEETTETTTTTETTETEEETETEEEETEEEETETEEETETTETTTTTETTEEEEEEETTTTTETTTT";
@@ -74,38 +81,61 @@
 			
 			var target_bitString = "";
 			
-			function randomMazeChunk()
+			function randomMazeChunk(addMonster)
 			{
 				var randInt = Math.floor(Math.random()*18);
 				var bitString = "";
 				switch(randInt)
 				{
-					case 0: return convertFromBitStringToChunk(rosie_bitStrip);
-					case 1: return convertFromBitStringToChunk(target_bitStrip);
-					case 2: return convertFromBitStringToChunk(hedge_bitStrip);
-					case 3: return convertFromBitStringToChunk(pinwheel_bitStrip);
-					case 4: return convertFromBitStringToChunk(scarab_bitStrip);
-					case 5: return convertFromBitStringToChunk(cross_bitStrip);
-					case 6: return convertFromBitStringToChunk(butterfly_bitStrip);
-					case 7: return convertFromBitStringToChunk(ticTacToe_bitStrip);
-					case 8: return convertFromBitStringToChunk(waves_bitStrip);
-					case 9: return convertFromBitStringToChunk(gauntlet_bitStrip);
-					case 10: return convertFromBitStringToChunk(guillotine_bitStrip);
-					case 11: return convertFromBitStringToChunk(block_bitStrip);
-					case 12: return convertFromBitStringToChunk(divide_bitStrip);
-					case 13: return convertFromBitStringToChunk(pillars_bitStrip);
-					case 14: return convertFromBitStringToChunk(moth_bitStrip);
-					case 15: return convertFromBitStringToChunk(dub_bitStrip);
-					case 16: return convertFromBitStringToChunk(ball_bitStrip);
-					case 17: return convertFromBitStringToChunk(elephant_bitStrip);
+					case 0: return convertFromBitStringToChunk(rosie_bitStrip, addMonster);
+					case 1: return convertFromBitStringToChunk(target_bitStrip, addMonster);
+					case 2: return convertFromBitStringToChunk(hedge_bitStrip, addMonster);
+					case 3: return convertFromBitStringToChunk(pinwheel_bitStrip, addMonster);
+					case 4: return convertFromBitStringToChunk(scarab_bitStrip, addMonster);
+					case 5: return convertFromBitStringToChunk(cross_bitStrip, addMonster);
+					case 6: return convertFromBitStringToChunk(butterfly_bitStrip, addMonster);
+					case 7: return convertFromBitStringToChunk(ticTacToe_bitStrip, addMonster);
+					case 8: return convertFromBitStringToChunk(waves_bitStrip, addMonster);
+					case 9: return convertFromBitStringToChunk(gauntlet_bitStrip, addMonster);
+					case 10: return convertFromBitStringToChunk(guillotine_bitStrip, addMonster);
+					case 11: return convertFromBitStringToChunk(block_bitStrip, addMonster);
+					case 12: return convertFromBitStringToChunk(divide_bitStrip, addMonster);
+					case 13: return convertFromBitStringToChunk(pillars_bitStrip, addMonster);
+					case 14: return convertFromBitStringToChunk(moth_bitStrip, addMonster);
+					case 15: return convertFromBitStringToChunk(dub_bitStrip, addMonster);
+					case 16: return convertFromBitStringToChunk(ball_bitStrip, addMonster);
+					case 17: return convertFromBitStringToChunk(elephant_bitStrip, addMonster);
 					//default: return convertFromBitStringToChunk(guillotine_bitStrip);
 				}
 			}
 			
-			function convertFromBitStringToChunk(bitString)
+			function convertFromBitStringToChunk(bitString, addMonster)
 			{
 				var chunk = [];
 				var bs = bitString;
+				
+				if (addMonster)
+				{
+					var emptyCount = (bs.match(/E/g) || []).length;
+					var matchIndexToReplace = Math.floor(Math.random()*emptyCount);
+					var emptyCounter = 0;
+					for (let i = 0; i < bs.length; i++)
+					{
+						if (bs.charAt(i) == "E")
+						{
+							if (emptyCounter == matchIndexToReplace)
+							{
+								bs = bitString.substr(0, i) + "M" + bitString.substr(i + 1);
+								break;
+							}
+							else
+							{
+								emptyCounter++;
+							}
+						}
+					}
+				}
+				
 				for (let i = 0; i < chunkSize; i++)
 				{
 					var row = [];
@@ -130,6 +160,9 @@
 								break;
 							case "P":
 								row.push("Player");
+								break;
+							case "M":
+								row.push("Monster");
 								break;
 							default:
 								row.push("Empty");
@@ -157,11 +190,18 @@
 								var chunk;
 								if ((i == Math.floor(chunksPerMap/2)) && (j == Math.floor(chunksPerMap/2)))
 								{
-									chunk = convertFromBitStringToChunk(start_bitStrip);
+									chunk = convertFromBitStringToChunk(start_bitStrip, false);
+								}
+								else if (((i == 0) && (j == 0)) 
+								|| (((i == chunksPerMap-1) && (j == 0))) 
+								|| (((i == 0) && (j == chunksPerMap-1))) 
+								|| (((i == chunksPerMap-1) && (j == chunksPerMap-1))))
+								{
+									chunk = randomMazeChunk(true);
 								}
 								else
 								{
-									chunk = randomMazeChunk();
+									chunk = randomMazeChunk(false);
 								}
 								rowOfChunks.push(chunk);
 							}
@@ -223,22 +263,76 @@
 					{
 						if (e.code === "ArrowUp")
 						{
-							console.log("Up");
+							movePlayer(-1, 0);
 						}
 						else if (e.code === "ArrowDown")
 						{
-							console.log("Down");
+							movePlayer(1, 0);
 						}
 						else if (e.code === "ArrowLeft")
 						{
-							console.log("Left");
+							movePlayer(0, -1);
 						}
 						else if (e.code === "ArrowRight")
 						{
-							console.log("Right");
+							movePlayer(0, 1);
 						}
 					}
 				);
+			}
+			
+			function getChest()
+			{
+				console.log("Got a chest!");
+			}
+			
+			function movePlayer(newX, newY)
+			{
+				var newPlayerX = playerX + newX;
+				if (newPlayerX < 0)
+				{
+					newPlayerX += map.length;
+				}
+				else if (newPlayerX >= map.length)
+				{
+					newPlayerX -= map.length;
+				}
+				var newPlayerY = playerY + newY;
+				if (newPlayerY < 0)
+				{
+					newPlayerY += map.length;
+				}
+				else if (newPlayerY >= map.length)
+				{
+					newPlayerY -= map.length;
+				}
+				
+				var newSpace = map[newPlayerY][newPlayerX];
+				
+				if (newSpace == "Empty")
+				{
+					map[playerY][playerX] = "Empty";
+					playerX = newPlayerX;
+					playerY = newPlayerY;
+					map[playerY][playerX] = "Player";
+				}
+				else if (newSpace == "Coin")
+				{
+					numCoins++;
+					map[playerY][playerX] = "Empty";
+					playerX = newPlayerX;
+					playerY = newPlayerY;
+					map[playerY][playerX] = "Player";
+				}
+				else if (newSpace == "Chest")
+				{
+					getChest();
+					map[playerY][playerX] = "Empty";
+					playerX = newPlayerX;
+					playerY = newPlayerY;
+					map[playerY][playerX] = "Player";
+				}
+				drawCanvas(map);
 			}
 			
 			function gameLoop()
