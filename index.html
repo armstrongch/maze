@@ -23,28 +23,77 @@
 			tileMapImg.src = "tileset.png";
 			var gameCanvas = document.getElementById("gameCanvas");
 			var ctx = gameCanvas.getContext("2d");
-			var chunkSize = 7;
+			var chunkSize = 9;
 			var chunksPerMap = 3;
 			var mapSize = chunkSize * chunksPerMap;
 			var tileSize = 32;
 			var map;
 			
+			var emptyRoom_bitString = "TTTTETTTTTEEEEEEETTEEEEEEETTEEEEEEETEEEEEEEEETEEEEEEETTEEEEEEETTEEEEEEETTTTTETTTT";
+			var target_bitStrip = "TTTTETTTTTEEEEEEETTETTTTTETTETEEETETEEEETEEEETETEEETETTETTTTTETTEEEEEEETTTTTETTTT";
+			var hedge_bitStrip = "TTTTETTTTTETEEETETTEEETEEETTETEEETETEETTTTTEETETEEETETTEEETEEETTETEEETETTTTTETTTT";
+			var pinwheel_bitStrip = "TTTTETTTTTEEEETEETTETTETTETTTTEEETETEEEEEEEEETETEEETTTTETTETTETTEETEEEETTTTTETTTT";
+			var cross_bitStrip = "TTTTETTTTTEEEEEEETTEEETEEETTEEETEEETEETTTTTEETEEETEEETTEEETEEETTEEEEEEETTTTTETTTT";
+			var butterfly_bitStrip = "TTTTETTTTTEETEEEETTEEEEEEETTTETTTETTEEETTTEEETTETTTETTTEEEEEEETTEETETEETTTTTETTTT";
+			var ticTacToe_bitStrip = "TTTTETTTTTEEEEEEETTEETETEETTETTTTTETEEETTTEEETETTTTTETTEETETEETTEEEEEEETTTTTETTTT";
+			var waves_bitStrip = "TTTTETTTTTEETEEEETTEEEETTETTTTEEETETEETETETEETETEEETTTTETTEEEETTEEEETEETTTTTETTTT";
+			var gauntlet_bitStrip = "TTTTETTTTTEEEEEEETTETETTTETTETEEETETEETTTETEETETEEETETTETETTTETTETEEETETTTTTETTTT";
+			var guillotine_bitStrip = "TTTTETTTTTEETETEETTEEEEEEETTETTETTETEEETETEEETETTETTETTETEEETETTEEEEEEETTTTTETTTT";
+			var scarab_bitStrip = "TTTTETTTTTEEEEEEETTETETETETTETTTTTETEEETTTEEETETTTTTETTETETETETTEEEEEEETTTTTETTTT";
+			var elephant_bitStrip = "TTTTETTTTTEEEEEEETTETTTETETTEETEETETEETTTTTEETETEETEETTETETTTETTEEEEEEETTTTTETTTT";
+			var rosie_bitStrip = "TTTTETTTTTEEEEEEETTETTTTTETTETTTTTETEETTTTTEETETTTTTETTETTTTTETTEEEEEEETTTTTETTTT";
+			var block_bitStrip = "TTTTETTTTTEEEEEEETTETTTTTETTETTTTTETEETTTTTEETETTTTTETTETTTTTETTEEEEEEETTTTTETTTT";
+			var divide_bitStrip = "TTTTETTTTTEEEEEEETTETEEEEETTETTEEEETEEETTTEEETEEEETTETTEEEEETETTEEEEEEETTTTTETTTT";
+			var pillars_bitStrip = "TTTTETTTTTEEEEEEETTETETETETTEEEEEEETEETETETEETEEEEEEETTETETETETTEEEEEEETTTTTETTTT";
+			var moth_bitStrip = "TTTTETTTTTETEEETETTEEEEEEETTTEETEETTEEEETEEEETTEETEETTTEEEEEEETTETEEETETTTTTETTTT";
+			var dub_bitStrip = "TTTTETTTTTEEEEEEETTETTETTETTETEEETETEETETETEETETETETETTETTTTTETTEEEEEEETTTTTETTTT";
+			var ball_bitStrip = "TTTTETTTTTEEEEEEETTEETTTEETTETTTTTETEETTTTTEETETTTTTETTEETTTEETTEEEEEEETTTTTETTTT";
+			
+			var target_bitString = "";
+			
 			function randomMazeChunk()
 			{
-				var randInt = Math.floor(Math.random()*10);
+				var randInt = Math.floor(Math.random()*18);
+				var bitString = "";
 				switch(randInt)
 				{
-					default:
-						return [
-							["T", "T", "T", "E", "T", "T", "T"],
-							["T", "E", "E", "E", "E", "E", "T"],
-							["T", "E", "E", "E", "E", "E", "T"],
-							["E", "E", "E", "E", "E", "E", "E"],
-							["T", "E", "E", "E", "E", "E", "T"],
-							["T", "E", "E", "E", "E", "E", "T"],
-							["T", "T", "T", "E", "T", "T", "T"]
-						];
+					case 0: return convertFromBitStringToChunk(rosie_bitStrip);
+					case 1: return convertFromBitStringToChunk(target_bitStrip);
+					case 2: return convertFromBitStringToChunk(hedge_bitStrip);
+					case 3: return convertFromBitStringToChunk(pinwheel_bitStrip);
+					case 4: return convertFromBitStringToChunk(scarab_bitStrip);
+					case 5: return convertFromBitStringToChunk(cross_bitStrip);
+					case 6: return convertFromBitStringToChunk(butterfly_bitStrip);
+					case 7: return convertFromBitStringToChunk(ticTacToe_bitStrip);
+					case 8: return convertFromBitStringToChunk(waves_bitStrip);
+					case 9: return convertFromBitStringToChunk(gauntlet_bitStrip);
+					case 10: return convertFromBitStringToChunk(guillotine_bitStrip);
+					case 11: return convertFromBitStringToChunk(block_bitStrip);
+					case 12: return convertFromBitStringToChunk(divide_bitStrip);
+					case 13: return convertFromBitStringToChunk(pillars_bitStrip);
+					case 14: return convertFromBitStringToChunk(moth_bitStrip);
+					case 15: return convertFromBitStringToChunk(dub_bitStrip);
+					case 16: return convertFromBitStringToChunk(ball_bitStrip);
+					case 17: return convertFromBitStringToChunk(elephant_bitStrip);
+					//default: return convertFromBitStringToChunk(guillotine_bitStrip);
 				}
+			}
+			
+			function convertFromBitStringToChunk(bitString)
+			{
+				var chunk = [];
+				var bs = bitString;
+				for (let i = 0; i < chunkSize; i++)
+				{
+					var row = [];
+					for (let j = 0; j < chunkSize; j++)
+					{
+						row.push(bs.charAt(0));
+						bs = bs.substring(1);
+					}
+					chunk.push(row);
+				}
+				return chunk;
 			}
 			
 			function generateMap(type)
@@ -74,8 +123,8 @@
 							{
 								var row = Math.floor(i/chunkSize);
 								var col = Math.floor(j/chunkSize);
-								var chunkRow = i%chunkSize;
-								var chunkCol = j%chunkSize;
+								var chunkRow = j%chunkSize;
+								var chunkCol = i%chunkSize; 
 								mazeRow.push(arrayOfChunks[row][col][chunkRow][chunkCol]);
 							}
 							maze.push(mazeRow);
