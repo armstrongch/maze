@@ -28,6 +28,8 @@
 				
 				Chest:				{x:8, y:6},
 				
+				Player:				{x:31, y:1},
+				
 				Empty:				{x:0, y:0}
 			}
 			
@@ -36,13 +38,16 @@
 			var gameCanvas = document.getElementById("gameCanvas");
 			var ctx = gameCanvas.getContext("2d");
 			var chunkSize = 9;
-			var chunksPerMap = 3;
+			var chunksPerMap = 3; //should always be an odd number
 			var mapSize = chunkSize * chunksPerMap;
 			var tileSize = 32;
 			var map;
 			
 			var emptySpaceBag = [];
 			var emptySpaceBagIndex = 0;
+			
+			var playerTurn = true;
+			var GameTurn = false;
 			
 			var emptyRoom_bitString = "TTTTETTTTTEEEEEEETTEEEEEEETTEEEEEEETEEEEEEEEETEEEEEEETTEEEEEEETTEEEEEEETTTTTETTTT";
 			var target_bitStrip = "TTTTETTTTTEEEEEEETTETTTTTETTETEEETETEEEETEEEETETEEETETTETTTTTETTEEEEEEETTTTTETTTT";
@@ -63,6 +68,9 @@
 			var moth_bitStrip = "TTTTETTTTTETEEETETTEEEEEEETTTEETEETTEEEETEEEETTEETEETTTEEEEEEETTETEEETETTTTTETTTT";
 			var dub_bitStrip = "TTTTETTTTTEEEEEEETTETTETTETTETEEETETEETETETEETETETETETTETTTTTETTEEEEEEETTTTTETTTT";
 			var ball_bitStrip = "TTTTETTTTTEEEEEEETTEETTTEETTETTTTTETEETTTTTEETETTTTTETTEETTTEETTEEEEEEETTTTTETTTT";
+			
+			var start_bitStrip = "TTTTETTTTTEEEEEEETTETTETTETTETEEETETEEEEPEEEETETEEETETTETTETTETTEEEEEEETTTTTETTTT";
+			
 			
 			var target_bitString = "";
 			
@@ -120,6 +128,9 @@
 								var randInt = Math.floor(Math.random() * 8);
 								row.push("Tree" + randInt);
 								break;
+							case "P":
+								row.push("Player");
+								break;
 							default:
 								row.push("Empty");
 								break;
@@ -143,7 +154,15 @@
 							var rowOfChunks = [];
 							for (let j = 0; j < chunksPerMap; j++)
 							{
-								var chunk = randomMazeChunk();
+								var chunk;
+								if ((i == Math.floor(chunksPerMap/2)) && (j == Math.floor(chunksPerMap/2)))
+								{
+									chunk = convertFromBitStringToChunk(start_bitStrip);
+								}
+								else
+								{
+									chunk = randomMazeChunk();
+								}
 								rowOfChunks.push(chunk);
 							}
 							arrayOfChunks.push(rowOfChunks);		
@@ -197,6 +216,34 @@
 				drawCanvas(map);
 				
 				emptySpaceBag = shuffle(emptySpaceBag);
+				
+				setInterval(gameLoop, 300);
+				
+				document.addEventListener('keydown', (e) => 
+					{
+						if (e.code === "ArrowUp")
+						{
+							console.log("Up");
+						}
+						else if (e.code === "ArrowDown")
+						{
+							console.log("Down");
+						}
+						else if (e.code === "ArrowLeft")
+						{
+							console.log("Left");
+						}
+						else if (e.code === "ArrowRight")
+						{
+							console.log("Right");
+						}
+					}
+				);
+			}
+			
+			function gameLoop()
+			{
+				//console.log("TEST");
 			}
 			
 			function drawCanvas(map)
