@@ -15,19 +15,20 @@
 			
 			var tilePositions = 
 			{
-				Tree1: 				{x:0,y:1},
-				Tree2: 				{x:1,y:1},
-				Tree3: 				{x:2,y:1},
-				Tree4: 				{x:3,y:1},
-				Tree5: 				{x:4,y:1},
-				Tree6: 				{x:5,y:1},
-				Tree7: 				{x:0,y:2},
-				Tree8: 				{x:1,y:2},
-				Tree9: 				{x:2,y:2},
-				Tree10: 			{x:3,y:2},
-				Tree0: 				{x:4,y:2},
+				Tree1: 				{x:0, y:1},
+				Tree2: 				{x:1, y:1},
+				Tree3: 				{x:2, y:1},
+				Tree4: 				{x:3, y:1},
+				Tree5: 				{x:4, y:1},
+				Tree6: 				{x:5, y:1},
+				Tree7: 				{x:3, y:2},
+				Tree0: 				{x:4, y:2},
 				
-				Empty:				{x:0,y:0}
+				Coin:				{x:22, y:4},
+				
+				Chest:				{x:8, y:6},
+				
+				Empty:				{x:0, y:0}
 			}
 			
 			var tileMapImg = new Image();
@@ -39,6 +40,9 @@
 			var mapSize = chunkSize * chunksPerMap;
 			var tileSize = 32;
 			var map;
+			
+			var emptySpaceBag = [];
+			var emptySpaceBagIndex = 0;
 			
 			var emptyRoom_bitString = "TTTTETTTTTEEEEEEETTEEEEEEETTEEEEEEETEEEEEEEEETEEEEEEETTEEEEEEETTEEEEEEETTTTTETTTT";
 			var target_bitStrip = "TTTTETTTTTEEEEEEETTETTTTTETTETEEETETEEEETEEEETETEEETETTETTTTTETTEEEEEEETTTTTETTTT";
@@ -104,10 +108,16 @@
 						switch(c)
 						{
 							case "E":
-								row.push("Empty");
+								if (emptySpaceBagIndex >= emptySpaceBag.length)
+								{
+									emptySpaceBag = shuffle(emptySpaceBag);
+									emptySpaceBagIndex = 0;
+								}
+								row.push(emptySpaceBag[emptySpaceBagIndex]);
+								emptySpaceBagIndex++;
 								break;
 							case "T":
-								var randInt = Math.floor(Math.random() * 11);
+								var randInt = Math.floor(Math.random() * 8);
 								row.push("Tree" + randInt);
 								break;
 							default:
@@ -158,13 +168,35 @@
 				}
 			}
 			
+			function buildStartingEmptySpaceBag()
+			{
+				var bag = [];
+				for (let i = 0; i < 10; i++)	// 10 Empty
+				{
+					bag.push("Empty");
+				}
+				for (let i = 0; i < 5; i++)		// 5 Coins
+				{
+					bag.push("Coin");
+				}
+				for (let i = 0; i < 1; i++)		// 1 Chest
+				{
+					bag.push("Chest");
+				}
+				return bag;
+			}
+			
 			function startGame()
 			{
 				gameCanvas.width = mapSize*tileSize;
 				gameCanvas.height = mapSize*tileSize;
 				
+				emptySpaceBag = buildStartingEmptySpaceBag();
+				
 				map = generateMap("random maze");
 				drawCanvas(map);
+				
+				emptySpaceBag = shuffle(emptySpaceBag);
 			}
 			
 			function drawCanvas(map)
