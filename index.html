@@ -44,6 +44,13 @@
 				Empty:				{x:0, y:0}
 			}
 			
+			var moveableTileNames = [
+				"Coin",
+				"Chest",
+				"Empty",
+				"Player"
+			];
+			
 			var monsterNames = [
 					"Scorpian",
 					"Ghost",
@@ -303,7 +310,7 @@
 							{
 								movePlayer(0, 1);
 							}
-							gameTurn();
+							
 						}
 					}
 				);
@@ -337,29 +344,23 @@
 				
 				var newSpace = map[newPlayerY][newPlayerX];
 				
-				if (newSpace == "Empty")
+				if (moveableTileNames.includes(newSpace))
 				{
 					map[playerY][playerX] = "Empty";
 					playerX = newPlayerX;
 					playerY = newPlayerY;
 					map[playerY][playerX] = "Player";
+					
+					if (newSpace == "Coin")
+					{
+						numCoins++;
+					}
+					else if (newSpace == "Chest")
+					{
+						getChest();
+					}
 				}
-				else if (newSpace == "Coin")
-				{
-					numCoins++;
-					map[playerY][playerX] = "Empty";
-					playerX = newPlayerX;
-					playerY = newPlayerY;
-					map[playerY][playerX] = "Player";
-				}
-				else if (newSpace == "Chest")
-				{
-					getChest();
-					map[playerY][playerX] = "Empty";
-					playerX = newPlayerX;
-					playerY = newPlayerY;
-					map[playerY][playerX] = "Player";
-				}
+				gameTurn();
 				drawCanvas(map);
 			}
 			
@@ -376,14 +377,121 @@
 						}
 					}
 				}
-				drawCanvas(map);
 			}
 			
-			/*function evaluateTargetSpace(i, j)
+			var priorityMap = [];
+			
+			function buildPriorityMap(targetI, targetJ)
 			{
-				var distanceFromPlayer = Math.sqrt((i - playerY)*(i - playerY) + (j - playerX)*(j - playerX));
+				priorityMap = [];
 				
-			}*/
+				for (let i = 0; i < map.length; i++)
+				{
+					var row = [];
+					for (let j = 0; j < map.length; j++)
+					{
+						row.push(map[i][j]);
+					}
+					priorityMap.push(row);
+				}
+				
+				priorityMap[targetI][targetJ] = 0;
+				assignSpacePriority(targetI + 1, targetJ, 1);
+				assignSpacePriority(targetI - 1, targetJ, 1);
+				assignSpacePriority(targetI, targetJ + 1, 1);
+				assignSpacePriority(targetI, targetJ - 1, 1);
+			}
+			
+			function getSpacePriority(targetI, targetJ, testPriority)
+			{
+				//This is used to determine if an adjacent space has already been prioritized.
+				//If it has, and it has lower priority than we're testing, we'll use that +1
+				//If it hasn't, we'll return the prio we're testing + 1, so that it won't be used
+				if (targetI < 0)
+				{
+					targetI += map.length;
+				}
+				else if (targetI >= map.length)
+				{
+					targetI -= map.length;
+				}
+				if (targetJ < 0)
+				{
+					targetJ += map.length;
+				}
+				else if (targetJ >= map.length)
+				{
+					targetJ -= map.length;
+				}
+				var targetSpaceContents = priorityMap[targetI][targetJ];
+				if ((!isNaN(parseInt(targetSpaceContents))) && (targetSpaceContents != -1))
+				{
+					return targetSpaceContents + 1;
+				}
+				else
+				{
+					return testPriority + 1;
+				}
+			}
+			
+			function assignSpacePriority(targetI, targetJ, newPriority)
+			{
+				var adjustedNewPriority = newPriority;
+				if (targetI < 0)
+				{
+					targetI += map.length;
+				}
+				else if (targetI >= map.length)
+				{
+					targetI -= map.length;
+				}
+				if (targetJ < 0)
+				{
+					targetJ += map.length;
+				}
+				else if (targetJ >= map.length)
+				{
+					targetJ -= map.length;
+				}
+				var targetSpaceContents = priorityMap[targetI][targetJ];
+				if (isNaN(parseInt(targetSpaceContents))) //this spaces hasn't been prioritized yet
+				{
+					if (moveableTileNames.includes(targetSpaceContents))
+					{
+						//Check all adjacent spaces, to see if they've been prioritized lower than this one will be prioritized. (to prevent snaking suboptimally due to iterating through map in order to prioritize)
+						var adjacentPriority = getSpacePriority(targetI + 1, targetJ, newPriority);
+						if (adjacentPriority < adjustedNewPriority)
+						{
+							adjustedNewPriority = adjacentPriority;
+						}
+						adjacentPriority = getSpacePriority(targetI - 1, targetJ, newPriority);
+						if (adjacentPriority < adjustedNewPriority)
+						{
+							adjustedNewPriority = adjacentPriority;
+						}
+						adjacentPriority = getSpacePriority(targetI, targetJ + 1, newPriority);
+						if (adjacentPriority < adjustedNewPriority)
+						{
+							adjustedNewPriority = adjacentPriority;
+						}
+						adjacentPriority = getSpacePriority(targetI, targetJ - 1, newPriority);
+						if (adjacentPriority < adjustedNewPriority)
+						{
+							adjustedNewPriority = adjacentPriority;
+						}
+						
+						priorityMap[targetI][targetJ] = adjustedNewPriority;
+						assignSpacePriority(targetI + 1, targetJ, newPriority + 1);
+						assignSpacePriority(targetI - 1, targetJ,  newPriority + 1);
+						assignSpacePriority(targetI, targetJ + 1, newPriority + 1);
+						assignSpacePriority(targetI, targetJ - 1, newPriority + 1);
+					}
+					else
+					{
+						priorityMap[targetI][targetJ] = -1;
+					}
+				}
+			}
 			
 			function moveMonster(mapEntity, i, j)
 			{
@@ -422,10 +530,8 @@
 					{
 						targetJ -= map.length;
 					}
-					var targetSpaceContents = map[targetI][targetJ]
-					if ((targetSpaceContents == "Empty")
-					|| (targetSpaceContents == "Coin")
-					|| (targetSpaceContents == "Chest"))
+					var targetSpaceContents = map[targetI][targetJ];
+					if (moveableTileNames.includes(targetSpaceContents))
 					{
 						map[targetI][targetJ] = mapEntity + "*"; //already moved
 						map[i][j] = targetSpaceContents;
