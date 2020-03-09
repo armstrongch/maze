@@ -34,24 +34,26 @@ priorityMap; //passed
 
 map = [
 	["Tree0", "Tree0", "Tree0", "Empty", "Tree0", "Tree0", "Tree0"],
-	["Tree0", "Empty", "Empty", "Player", "Empty", "Tree0", "Tree0"],
+	["Tree0", "Player", "Empty", "Empty", "Empty", "Tree0", "Tree0"],
 	["Tree0", "Empty", "Tree0", "Empty", "Empty", "Tree0", "Tree0"],
 	["Tree0", "Empty", "Tree0", "Empty", "Empty", "Empty", "Tree0"],
 	["Tree0", "Empty", "Tree0", "Tree0", "Tree0", "Empty", "Tree0"],
-	["Tree0", "Tree0", "Tree0", "Empty", "Tree0", "Tree0", "Tree0"],
+	["Tree0", "Empty", "Tree0", "Empty", "Tree0", "Empty", "Tree0"],
+	["Tree0", "Tree0", "Tree0", "Empty", "Tree0", "Tree0", "Tree0"]
 ];
 
 buildPriorityMap(1, 1);
 
-for (let i = 0; i < priorityMap.length; i++)
-{
-	for (let j = 0; j < priorityMap.length; j++)
-	{
-		if (isNaN(parseInt(priorityMap[i][j])))
-		{
-			priorityMap[i][j] = -1;
-		}
-	}
-}
+priorityMap; //passed
 
-priorityMap; //failed!
+map = [
+	["Tree0", "Tree0", "Tree0", "Tree0", "Tree0"],
+	["Empty", "Empty", "Empty", "Player", "Empty"],
+	["Tree0", "Empty", "Empty", "Empty", "Tree0"],
+	["Tree0", "Empty", "Empty", "Empty", "Tree0"],
+	["Tree0", "Tree0", "Tree0", "Tree0", "Tree0"]
+];
+
+buildPriorityMap(1, 1);
+
+priorityMap; //passed

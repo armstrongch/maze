@@ -366,6 +366,7 @@
 			
 			function gameTurn()
 			{
+				buildPriorityMap(playerY, playerX);
 				for (let i = 0; i < map.length; i++)
 				{
 					for (let j = 0; j < map[i].length; j++)
@@ -400,9 +401,20 @@
 				assignSpacePriority(targetI - 1, targetJ, 1);
 				assignSpacePriority(targetI, targetJ + 1, 1);
 				assignSpacePriority(targetI, targetJ - 1, 1);
+				
+				for (let i = 0; i < priorityMap.length; i++)
+				{
+					for (let j = 0; j < priorityMap.length; j++)
+					{
+						if (isNaN(parseInt(priorityMap[i][j])))
+						{
+							priorityMap[i][j] = -1;
+						}
+					}
+				}
 			}
 			
-			function getSpacePriority(targetI, targetJ, testPriority)
+			function compareSpacePriority(targetI, targetJ, testPriority)
 			{
 				//This is used to determine if an adjacent space has already been prioritized.
 				//If it has, and it has lower priority than we're testing, we'll use that +1
@@ -426,7 +438,15 @@
 				var targetSpaceContents = priorityMap[targetI][targetJ];
 				if ((!isNaN(parseInt(targetSpaceContents))) && (targetSpaceContents != -1))
 				{
-					return targetSpaceContents + 1;
+					/*if (targetSpaceContents > testPriority + 1)
+					{
+						priorityMap[targetI][targetJ] = testPriority + 1;
+						return testPriority + 1;
+					}
+					else
+					{*/
+						return targetSpaceContents + 1;
+					//}
 				}
 				else
 				{
@@ -454,37 +474,39 @@
 					targetJ -= map.length;
 				}
 				var targetSpaceContents = priorityMap[targetI][targetJ];
-				if (isNaN(parseInt(targetSpaceContents))) //this spaces hasn't been prioritized yet
+				if ((isNaN(parseInt(targetSpaceContents))) || ((targetSpaceContents > newPriority) && (targetSpaceContents != -1))) //this spaces hasn't been prioritized yet or it's been prioritized too high
 				{
-					if (moveableTileNames.includes(targetSpaceContents))
+					if ((moveableTileNames.includes(targetSpaceContents))
+						|| (monsterNames.includes(targetSpaceContents))
+						|| (!isNaN(parseInt(targetSpaceContents))))
 					{
 						//Check all adjacent spaces, to see if they've been prioritized lower than this one will be prioritized. (to prevent snaking suboptimally due to iterating through map in order to prioritize)
-						var adjacentPriority = getSpacePriority(targetI + 1, targetJ, newPriority);
+						var adjacentPriority = compareSpacePriority(targetI + 1, targetJ, newPriority);
 						if (adjacentPriority < adjustedNewPriority)
 						{
 							adjustedNewPriority = adjacentPriority;
 						}
-						adjacentPriority = getSpacePriority(targetI - 1, targetJ, newPriority);
+						adjacentPriority = compareSpacePriority(targetI - 1, targetJ, newPriority);
 						if (adjacentPriority < adjustedNewPriority)
 						{
 							adjustedNewPriority = adjacentPriority;
 						}
-						adjacentPriority = getSpacePriority(targetI, targetJ + 1, newPriority);
+						adjacentPriority = compareSpacePriority(targetI, targetJ + 1, newPriority);
 						if (adjacentPriority < adjustedNewPriority)
 						{
 							adjustedNewPriority = adjacentPriority;
 						}
-						adjacentPriority = getSpacePriority(targetI, targetJ - 1, newPriority);
+						adjacentPriority = compareSpacePriority(targetI, targetJ - 1, newPriority);
 						if (adjacentPriority < adjustedNewPriority)
 						{
 							adjustedNewPriority = adjacentPriority;
 						}
 						
 						priorityMap[targetI][targetJ] = adjustedNewPriority;
-						assignSpacePriority(targetI + 1, targetJ, newPriority + 1);
-						assignSpacePriority(targetI - 1, targetJ,  newPriority + 1);
-						assignSpacePriority(targetI, targetJ + 1, newPriority + 1);
-						assignSpacePriority(targetI, targetJ - 1, newPriority + 1);
+						assignSpacePriority(targetI + 1, targetJ, adjustedNewPriority + 1);
+						assignSpacePriority(targetI - 1, targetJ,  adjustedNewPriority + 1);
+						assignSpacePriority(targetI, targetJ + 1, adjustedNewPriority + 1);
+						assignSpacePriority(targetI, targetJ - 1, adjustedNewPriority + 1);
 					}
 					else
 					{
@@ -498,21 +520,66 @@
 				var targetSpaces = [];
 				switch(mapEntity)
 				{
-					default: //move randomly
-						targetSpaces.push([i-1, j]);
-						targetSpaces.push([i+1, j]);
-						targetSpaces.push([i, j+1]);
-						targetSpaces.push([i, j-1]);
+					default: //move toward player's position
+						
+						var i_minus = i - 1;
+						if (i_minus < 0)
+						{
+							i_minus += map.length;
+						}
+						targetSpaces.push(
+							{
+								space_i: 		i_minus,
+								space_j: 		j,
+								space_priority:	priorityMap[i_minus][j]
+							}
+						);
+						var i_plus = i + 1;
+						if (i_plus >= map.length)
+						{
+							i_plus -= map.length;
+						}
+						targetSpaces.push(
+							{
+								space_i: 		i_plus,
+								space_j: 		j,
+								space_priority:	priorityMap[i_plus][j]
+							}
+						);
+						var j_minus = j - 1;
+						if (j_minus < 0)
+						{
+							j_minus += map.length;
+						}
+						targetSpaces.push(
+							{
+								space_i: 		i,
+								space_j: 		j_minus,
+								space_priority:	priorityMap[i][j_minus]
+							}
+						);
+						var j_plus = j + 1;
+						if (j_plus >= map.length)
+						{
+							j_plus -= map.length;
+						}
+						targetSpaces.push(
+							{
+								space_i: 		i,
+								space_j: 		j_plus,
+								space_priority:	priorityMap[i][j_plus]
+							}
+						);
+						targetSpaces = sort_by_key(targetSpaces, 'space_priority');
 						break;
 				}
-				targetSpaces = shuffle(targetSpaces);
 				
 				var new_i = i;
 				var new_j = j;
 				
 				for (let x = 0; x < targetSpaces.length; x++)
 				{
-					targetI = targetSpaces[x][0];
+					targetI = targetSpaces[x].space_i;
 					if (targetI < 0)
 					{
 						targetI += map.length;
@@ -521,7 +588,7 @@
 					{
 						targetI -= map.length;
 					}
-					targetJ = targetSpaces[x][1];
+					targetJ = targetSpaces[x].space_j;
 					if (targetJ < 0)
 					{
 						targetJ += map.length;
@@ -562,8 +629,6 @@
 					}
 				}
 			}
-			
-			
 			
 			function shuffle(array) { //from: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
 				var currentIndex = array.length, temporaryValue, randomIndex;
