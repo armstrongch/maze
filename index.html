@@ -338,10 +338,13 @@
 							{
 								movePlayer(0, 1);
 							}
-							
 						}
 					}
 				);
+				
+				//Test
+				setupTestMode();
+				//Test
 			}
 			
 			function getChest()
@@ -431,10 +434,13 @@
 			
 			function gameTurn()
 			{
-				buildPriorityMap(playerY, playerX, 0); //playerTargeted
+				buildPriorityMap(playerY, playerX, 0, []); //playerTargetted
+				
 				forecastPlayerPosition();
 				buildPriorityMap(forecastedPlayerPosition[1], 
-					forecastedPlayerPosition[0], 1); //playerForecasted 
+					forecastedPlayerPosition[0], 1, []); //playerForecasted
+					
+				buildPriorityMap(playerY, playerX, 2, monsterNames); //playerTargetted, avoiding all other monsters
 				
 				for (let i = 0; i < map.length; i++)
 				{
@@ -452,8 +458,9 @@
 			var priorityMaps = [];
 			priorityMaps.push([]); //playerTargeted
 			priorityMaps.push([]); //playerForecasted
+			priorityMaps.push([]); //playerTargeted, avoiding Monsters
 			
-			function buildPriorityMap(targetI, targetJ, priorityMapIndex)
+			function buildPriorityMap(targetI, targetJ, priorityMapIndex, entitiesToAvoid)
 			{
 				priorityMaps[priorityMapIndex] = [];
 				
@@ -476,10 +483,10 @@
 					priorityMaps[priorityMapIndex][targetI][targetJ] = -1;
 				}
 				
-				assignSpacePriority(targetI + 1, targetJ, 1, priorityMapIndex);
-				assignSpacePriority(targetI - 1, targetJ, 1, priorityMapIndex);
-				assignSpacePriority(targetI, targetJ + 1, 1, priorityMapIndex);
-				assignSpacePriority(targetI, targetJ - 1, 1, priorityMapIndex);
+				assignSpacePriority(targetI + 1, targetJ, 1, priorityMapIndex, entitiesToAvoid);
+				assignSpacePriority(targetI - 1, targetJ, 1, priorityMapIndex, entitiesToAvoid);
+				assignSpacePriority(targetI, targetJ + 1, 1, priorityMapIndex, entitiesToAvoid);
+				assignSpacePriority(targetI, targetJ - 1, 1, priorityMapIndex, entitiesToAvoid);
 				
 				for (let i = 0; i < priorityMaps[priorityMapIndex].length; i++)
 				{
@@ -525,7 +532,7 @@
 				}
 			}
 			
-			function assignSpacePriority(targetI, targetJ, newPriority, priorityMapIndex)
+			function assignSpacePriority(targetI, targetJ, newPriority, priorityMapIndex, entitiesToAvoid)
 			{
 				var adjustedNewPriority = newPriority;
 				if (targetI < 0)
@@ -573,11 +580,15 @@
 							adjustedNewPriority = adjacentPriority;
 						}
 						
+						if (entitiesToAvoid.includes(map[targetI][targetJ]))
+						{
+							adjustedNewPriority += 15;
+						}
 						priorityMaps[priorityMapIndex][targetI][targetJ] = adjustedNewPriority;
-						assignSpacePriority(targetI + 1, targetJ, adjustedNewPriority + 1, priorityMapIndex);
-						assignSpacePriority(targetI - 1, targetJ,  adjustedNewPriority + 1, priorityMapIndex);
-						assignSpacePriority(targetI, targetJ + 1, adjustedNewPriority + 1, priorityMapIndex);
-						assignSpacePriority(targetI, targetJ - 1, adjustedNewPriority + 1, priorityMapIndex);
+						assignSpacePriority(targetI + 1, targetJ, adjustedNewPriority + 1, priorityMapIndex, entitiesToAvoid);
+						assignSpacePriority(targetI - 1, targetJ,  adjustedNewPriority + 1, priorityMapIndex, entitiesToAvoid);
+						assignSpacePriority(targetI, targetJ + 1, adjustedNewPriority + 1, priorityMapIndex, entitiesToAvoid);
+						assignSpacePriority(targetI, targetJ - 1, adjustedNewPriority + 1, priorityMapIndex, entitiesToAvoid);
 					}
 					else
 					{
@@ -602,8 +613,10 @@
 							monsterPriorityMapIndex = 1;
 						}
 						break;
+					/*case "Skeleton":
+						break;*/
 					default:
-						monsterPriorityMapIndex = 0;
+						monsterPriorityMapIndex = 2;
 						break;
 				}
 				
@@ -719,7 +732,7 @@
 				
 				if (testMode)
 				{
-					ctx.strokeStyle="blue";
+					/*ctx.strokeStyle="blue";
 					ctx.beginPath();
 					ctx.moveTo(forecastedPlayerPosition[1] * tileSize, forecastedPlayerPosition[0] * tileSize);
 					ctx.lineTo(playerY * tileSize, playerX * tileSize);
@@ -732,7 +745,7 @@
 						ctx.moveTo(forecastedPlayerPosition[1] * tileSize, forecastedPlayerPosition[0] * tileSize);
 						ctx.lineTo(ghostLocations[i][0] * tileSize, ghostLocations[i][1] * tileSize);
 						ctx.stroke();	
-					}
+					}*/
 				}
 			}
 			
