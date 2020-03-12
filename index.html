@@ -676,30 +676,26 @@
 				for (let x = 0; x < targetSpaces.length; x++)
 				{
 					targetI = targetSpaces[x].space_i;
-					if (targetI < 0)
-					{
-						targetI += map.length;
-					}
-					else if (targetI >= map.length)
-					{
-						targetI -= map.length;
-					}
 					targetJ = targetSpaces[x].space_j;
-					if (targetJ < 0)
-					{
-						targetJ += map.length;
-					}
-					else if (targetJ >= map.length)
-					{
-						targetJ -= map.length;
-					}
 					var targetSpaceContents = map[targetI][targetJ];
+					if (targetSpaceContents == "Player")
+					{
+						monsterEatsPlayer(mapEntity, targetI, targetJ);
+					}
 					if (moveableTileNames.includes(targetSpaceContents))
 					{
 						map[targetI][targetJ] = mapEntity + "*"; //already moved
 						map[i][j] = targetSpaceContents;
 						x = targetSpaces.length;
 					}
+				}
+			}
+			
+			function monsterEatsPlayer(monsterName, i, j)
+			{
+				if (testMode)
+				{
+					alert("You were eaten by a " + monsterName + "!");
 				}
 			}
 			
