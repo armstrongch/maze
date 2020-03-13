@@ -67,7 +67,48 @@
 				Bear:				{x:30, y:8},
 				Knight:				{x:31, y:0},
 				
-				Empty:				{x:0, y:0}
+				Empty:				{x:0, y:0},
+				
+				Zero:				{x:19, y:29},
+				One:				{x:20, y:29},
+				Two:				{x:21, y:29},
+				Three:				{x:22, y:29},
+				Four:				{x:23, y:29},
+				Five:				{x:24, y:29},
+				Six:				{x:25, y:29},
+				Seven:				{x:26, y:29},
+				Eight:				{x:27, y:29},
+				Cents:				{x:20, y:28},
+				
+				A:					{x:19, y:30},
+				B:					{x:20, y:30},
+				C:					{x:21, y:30},
+				D:					{x:22, y:30},
+				E:					{x:23, y:30},
+				F:					{x:24, y:30},
+				G:					{x:25, y:30},
+				H:					{x:26, y:30},
+				I:					{x:27, y:30},
+				J:					{x:28, y:30},
+				K:					{x:29, y:30},
+				L:					{x:30, y:30},
+				M:					{x:31, y:30},
+				N:					{x:19, y:31},
+				O:					{x:20, y:31},
+				P:					{x:21, y:31},
+				Q:					{x:22, y:31},
+				R:					{x:23, y:31},
+				S:					{x:24, y:31},
+				T:					{x:25, y:31},
+				U:					{x:26, y:31},
+				V:					{x:27, y:31},
+				W:					{x:28, y:31},
+				X:					{x:29, y:31},
+				Y:					{x:30, y:31},
+				Z:					{x:31, y:31},
+				Period:				{x:30, y:29},
+				
+				NoGear:				{x:20, y:24}
 			}
 			
 			var moveableTileNames = [
@@ -117,6 +158,7 @@
 			var forecastedPlayerPosition = []; //where the player might be in 10 turns, based on playerMoveHistory
 			
 			var numCoins = 0;
+			var gear = ["NoGear", "NoGear", "NoGear"];
 			
 			var emptyRoom_bitString = "TTTTETTTTTEEEEEEETTEEEEEEETTEEEEEEETEEEEEEEEETEEEEEEETTEEEEEEETTEEEEEEETTTTTETTTT";
 			var target_bitStrip = "TTTTETTTTTEEEEEEETTETTTTTETTETEEETETEEEETEEEETETEEETETTETTTTTETTEEEEEEETTTTTETTTT";
@@ -308,7 +350,7 @@
 			
 			function startGame()
 			{
-				gameCanvas.width = mapSize*tileSize;
+				gameCanvas.width = (mapSize + 4)*tileSize;
 				gameCanvas.height = mapSize*tileSize;
 				
 				emptySpaceBag = buildStartingEmptySpaceBag();
@@ -701,7 +743,6 @@
 			
 			function drawCanvas(map)
 			{
-				var ghostLocations = [];
 				for (let i = 0; i < map.length; i++)
 				{
 					for (let j = 0; j < map[0].length; j++)
@@ -709,10 +750,6 @@
 						if (map[i][j].includes("*"))
 						{
 							map[i][j] = map[i][j].substr(0, map[i][j].length - 1);
-						}
-						if (map[i][j] == "Ghost")
-						{
-							ghostLocations.push([i, j]);
 						}
 						ctx.drawImage(
 							tileMapImg,
@@ -725,23 +762,67 @@
 						);
 					}
 				}
-				
-				if (testMode)
+				//draw UI
+				for (let i = 0; i < 4; i++)
 				{
-					/*ctx.strokeStyle="blue";
-					ctx.beginPath();
-					ctx.moveTo(forecastedPlayerPosition[1] * tileSize, forecastedPlayerPosition[0] * tileSize);
-					ctx.lineTo(playerY * tileSize, playerX * tileSize);
-					ctx.stroke();	
-					
-					for (let i = 0; i < ghostLocations.length; i++)
+					for (let j = 0; j < map.length; j++)
 					{
-						ctx.strokeStyle="red";
-						ctx.beginPath();
-						ctx.moveTo(forecastedPlayerPosition[1] * tileSize, forecastedPlayerPosition[0] * tileSize);
-						ctx.lineTo(ghostLocations[i][0] * tileSize, ghostLocations[i][1] * tileSize);
-						ctx.stroke();	
-					}*/
+						var tileToDraw;
+						var cents = numCoins.toString().split('');
+						while (cents.length < 3)
+						{
+							cents.unshift("Zero");
+						}
+						for (let k = 0; k < cents.length; k++)
+						{
+							cents[k] = digitToDigitName(cents[k]);
+						}
+						switch (i + " " + j)
+						{
+							case "0 1":
+								tileToDraw = cents[0];
+								break;
+							case "1 1":
+								tileToDraw = cents[1];
+								break;
+							case "2 1":
+								tileToDraw = cents[2];
+								break;
+							case "3 1":
+								tileToDraw = "Cents";
+								break;
+							default:
+								tileToDraw = "Empty";
+								break;
+						}
+						ctx.drawImage(
+							tileMapImg,
+							tilePositions[tileToDraw].x*(tileSize + 2),
+							tilePositions[tileToDraw].y*(tileSize + 2),
+							tileSize, tileSize,
+							(map.length + i) * tileSize,
+							j*tileSize,
+							tileSize, tileSize
+						);
+					}
+				}
+			}
+			
+			function digitToDigitName(digit)
+			{
+				switch(digit)
+				{
+					case "0": return "Zero";
+					case "1": return "One";
+					case "2": return "Two";
+					case "3": return "Three";
+					case "4": return "Four";
+					case "5": return "Five";
+					case "6": return "Six";
+					case "7": return "Seven";
+					case "8": return "Eight";
+					case "9": return "Nine";
+					default: return digit;
 				}
 			}
 			
