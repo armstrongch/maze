@@ -36,6 +36,9 @@
 						}
 					}
 				}
+				gear[0] = "Torch";
+				gear[1] = "Cloak";
+				numCoins = 100;
 				drawCanvas(map);
 			}
 			
@@ -69,22 +72,54 @@
 				
 				Empty:				{x:0, y:0},
 				
-				NoGear:				{x:20, y:24}
+				NoGear:				{x:20, y:24},
+				Torch:				{x:10, y:25},
+				Cloak:				{x:15, y:24}
 			}
 			
 			var gearInfo =
 			{
 				NoGear: {
 					name: "None",
-					desc: "Unused gear slot",
+					desc: "\"Unused gear slot.\"",
 					cost: 0
+				},
+				Torch: {
+					name: "Torch",
+					desc: "\"Stun adjacent monsters for 5 rounds.\"",
+					cost: 15,
+					use: function() {
+						stunMonsterInPosition(playerY + 1, playerX, 5);
+						stunMonsterInPosition(playerY - 1, playerX, 5);
+						stunMonsterInPosition(playerY, playerX + 1, 5);
+						stunMonsterInPosition(playerY, playerX - 1, 5);
+					}
+				},
+				Cloak: {
+					name: "Cloak",
+					desc: "\"Teleport to a random empty space.\"",
+					cost: 20,
+					use: function() {alert("Used the Cloak!");}
+				}
+			}
+			
+			function stunMonsterInPosition(i, j, numTurns)
+			{
+				var possibleMonsterName = map[i][j].replace(/$/g, "");
+				if (monsterNames.includes(possibleMonsterName))
+				{
+					for (let k = 0; k < numTurns; k++)
+					{
+						map[i][j] = map[i][j] + "$";
+					}
 				}
 			}
 			
 			function getGearUIString(gearEntityName, button)
 			{
 				var UIStringArray = [];
-				UIStringArray.push("[" + button + "] " + gearInfo[gearEntityName].name);
+				UIStringArray.push("[" + button + "]");
+				UIStringArray.push(gearInfo[gearEntityName].name);
 				UIStringArray.push("Cost: " +  gearInfo[gearEntityName].cost);
 				UIStringArray.push(gearInfo[gearEntityName].desc);
 				while(UIStringArray[UIStringArray.length - 1].length > 16)
@@ -124,6 +159,10 @@
 			
 			var tileMapImg = new Image();
 			tileMapImg.src = "tileset.png";
+			
+			var tileMapImg_flipped = new Image();
+			tileMapImg_flipped.src = "tileset_flipped.png";
+			
 			var gameCanvas = document.getElementById("gameCanvas");
 			var ctx = gameCanvas.getContext("2d");
 			var chunkSize = 9;
@@ -367,6 +406,18 @@
 							{
 								movePlayer(0, 1);
 							}
+							else if (e.code === "KeyA") //A
+							{
+								useGear(gear[0]);
+							}
+							else if (e.code === "KeyS") //S
+							{
+								useGear(gear[1]);
+							}
+							else if (e.code === "KeyD") //D
+							{
+								useGear(gear[2]);
+							}
 						}
 					}
 				);
@@ -374,6 +425,21 @@
 				//Test
 				setupTestMode();
 				//Test
+			}
+			
+			function useGear(gearName)
+			{
+				if (gearName != "NoGear")
+				{
+					var gear = gearInfo[gearName];
+					if (gear.cost <= numCoins)
+					{
+						gear.use();
+						numCoins -= gear.cost;
+						gameTurn();
+						drawCanvas(map);
+					}
+				}
 			}
 			
 			function getChest()
@@ -476,9 +542,9 @@
 					for (let j = 0; j < map[i].length; j++)
 					{
 						var mapEntity = map[i][j];
-						if (monsterNames.includes(mapEntity))
+						if (monsterNames.includes(mapEntity.replace(/\$/g, "").replace(/\*/, "")))
 						{
-							moveMonster(mapEntity, i, j);
+							moveMonster(map[i][j], i, j);
 						}
 					}
 				}
@@ -628,94 +694,101 @@
 			
 			function moveMonster(mapEntity, i, j)
 			{
-				var targetSpaces = [];
-				var monsterPriorityMapIndex
-				switch(mapEntity)
+				if (mapEntity.includes("$"))
 				{
-					case "Ghost":
-						if (priorityMaps[0][i][j] < 3)
+					map[i][j] = mapEntity.replace("$", "");
+				}
+				else if (!mapEntity.includes("*"))
+				{
+					var targetSpaces = [];
+					var monsterPriorityMapIndex
+					switch(mapEntity)
+					{
+						case "Ghost":
+							if (priorityMaps[0][i][j] < 3)
+							{
+								monsterPriorityMapIndex = 0;
+							}
+							else
+							{
+								monsterPriorityMapIndex = 1;
+							}
+							break;
+						/*case "Skeleton":
+							break;*/
+						default:
+							monsterPriorityMapIndex = 2;
+							break;
+					}
+					
+					var i_minus = i - 1;
+					if (i_minus < 0)
+					{
+						i_minus += map.length;
+					}
+					targetSpaces.push(
 						{
-							monsterPriorityMapIndex = 0;
+							space_i: 		i_minus,
+							space_j: 		j,
+							space_priority:	priorityMaps[monsterPriorityMapIndex][i_minus][j]
 						}
-						else
+					);
+					var i_plus = i + 1;
+					if (i_plus >= map.length)
+					{
+						i_plus -= map.length;
+					}
+					targetSpaces.push(
 						{
-							monsterPriorityMapIndex = 1;
+							space_i: 		i_plus,
+							space_j: 		j,
+							space_priority:	priorityMaps[monsterPriorityMapIndex][i_plus][j]
 						}
-						break;
-					/*case "Skeleton":
-						break;*/
-					default:
-						monsterPriorityMapIndex = 2;
-						break;
-				}
-				
-				var i_minus = i - 1;
-				if (i_minus < 0)
-				{
-					i_minus += map.length;
-				}
-				targetSpaces.push(
+					);
+					var j_minus = j - 1;
+					if (j_minus < 0)
 					{
-						space_i: 		i_minus,
-						space_j: 		j,
-						space_priority:	priorityMaps[monsterPriorityMapIndex][i_minus][j]
+						j_minus += map.length;
 					}
-				);
-				var i_plus = i + 1;
-				if (i_plus >= map.length)
-				{
-					i_plus -= map.length;
-				}
-				targetSpaces.push(
+					targetSpaces.push(
+						{
+							space_i: 		i,
+							space_j: 		j_minus,
+							space_priority:	priorityMaps[monsterPriorityMapIndex][i][j_minus]
+						}
+					);
+					var j_plus = j + 1;
+					if (j_plus >= map.length)
 					{
-						space_i: 		i_plus,
-						space_j: 		j,
-						space_priority:	priorityMaps[monsterPriorityMapIndex][i_plus][j]
+						j_plus -= map.length;
 					}
-				);
-				var j_minus = j - 1;
-				if (j_minus < 0)
-				{
-					j_minus += map.length;
-				}
-				targetSpaces.push(
+					targetSpaces.push(
+						{
+							space_i: 		i,
+							space_j: 		j_plus,
+							space_priority:	priorityMaps[monsterPriorityMapIndex][i][j_plus]
+						}
+					);
+					targetSpaces = sort_by_key(targetSpaces, 'space_priority');
+					
+					var new_i = i;
+					var new_j = j;
+					
+					for (let x = 0; x < targetSpaces.length; x++)
 					{
-						space_i: 		i,
-						space_j: 		j_minus,
-						space_priority:	priorityMaps[monsterPriorityMapIndex][i][j_minus]
-					}
-				);
-				var j_plus = j + 1;
-				if (j_plus >= map.length)
-				{
-					j_plus -= map.length;
-				}
-				targetSpaces.push(
-					{
-						space_i: 		i,
-						space_j: 		j_plus,
-						space_priority:	priorityMaps[monsterPriorityMapIndex][i][j_plus]
-					}
-				);
-				targetSpaces = sort_by_key(targetSpaces, 'space_priority');
-				
-				var new_i = i;
-				var new_j = j;
-				
-				for (let x = 0; x < targetSpaces.length; x++)
-				{
-					targetI = targetSpaces[x].space_i;
-					targetJ = targetSpaces[x].space_j;
-					var targetSpaceContents = map[targetI][targetJ];
-					if (targetSpaceContents == "Player")
-					{
-						monsterEatsPlayer(mapEntity, targetI, targetJ);
-					}
-					if (moveableTileNames.includes(targetSpaceContents))
-					{
-						map[targetI][targetJ] = mapEntity + "*"; //already moved
-						map[i][j] = targetSpaceContents;
-						x = targetSpaces.length;
+						targetI = targetSpaces[x].space_i;
+						targetJ = targetSpaces[x].space_j;
+						var targetSpaceContents = map[targetI][targetJ];
+						if (targetSpaceContents == "Player")
+						{
+							monsterEatsPlayer(mapEntity, targetI, targetJ);
+						}
+						if (moveableTileNames.includes(targetSpaceContents))
+						{
+							map[targetI][targetJ] = mapEntity + "*"; //already moved
+							map[i][j] = targetSpaceContents;
+							x = targetSpaces.length;
+						}
 					}
 				}
 			}
@@ -734,19 +807,43 @@
 				{
 					for (let j = 0; j < map[0].length; j++)
 					{
+						var stunned = false;
+						var entityNameToDraw = map[i][j].replace(/\$/g, "").replace(/\*/g, "");
+						
+						if (map[i][j].includes("$"))
+						{
+							stunned = true;
+						}
+						
 						if (map[i][j].includes("*"))
 						{
-							map[i][j] = map[i][j].substr(0, map[i][j].length - 1);
+							map[i][j] = map[i][j].replace(/\*/g, "");
 						}
-						ctx.drawImage(
-							tileMapImg,
-							tilePositions[map[i][j]].x*(tileSize + 2),
-							tilePositions[map[i][j]].y*(tileSize + 2),
-							tileSize, tileSize,
-							i*tileSize,
-							j*tileSize,
-							tileSize, tileSize
-						);
+
+						if (stunned)
+						{
+							ctx.drawImage(
+								tileMapImg_flipped,
+								tilePositions[entityNameToDraw].x*(tileSize + 2),
+								(31 - tilePositions[entityNameToDraw].y)*(tileSize + 2),
+								tileSize, tileSize,
+								i*tileSize,
+								j*tileSize,
+								tileSize, tileSize
+							);
+						}
+						else
+						{
+							ctx.drawImage(
+								tileMapImg,
+								tilePositions[entityNameToDraw].x*(tileSize + 2),
+								tilePositions[entityNameToDraw].y*(tileSize + 2),
+								tileSize, tileSize,
+								i*tileSize,
+								j*tileSize,
+								tileSize, tileSize
+							);
+						}
 					}
 				}
 				//draw UI
@@ -785,6 +882,15 @@
 				for (let i = 0; i < gear.length; i++)
 				{
 					var UIStringArray = getGearUIString(gear[i], gearButtons[i]);
+					ctx.drawImage(
+							tileMapImg,
+							tilePositions[gear[i]].x*(tileSize + 2),
+							tilePositions[gear[i]].y*(tileSize + 2),
+							tileSize, tileSize,
+							UIX + 128,
+							UIY + 60 + newlines*16,
+							tileSize, tileSize
+						);
 					for (let j = 0; j < UIStringArray.length; j++)
 					{
 						ctx.fillText(UIStringArray[j], UIX, UIY + 80 + newlines*16);
