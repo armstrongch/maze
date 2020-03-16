@@ -36,8 +36,9 @@
 						}
 					}
 				}
-				gear[0] = "Torch";
+				gear[0] = "Flamethrower";
 				gear[1] = "Cloak";
+				gear[2] = "Crossbow";
 				numCoins = 100;
 				drawCanvas(map);
 			}
@@ -74,19 +75,23 @@
 				
 				NoGear:				{x:20, y:24},
 				Torch:				{x:10, y:25},
-				Cloak:				{x:15, y:24}
+				Cloak:				{x:15, y:24},
+				Crossbow:			{x:6, y:27},
+				Bomb:				{x:13, y:31},
+				Flamethrower:		{x:10, y:31},
+				Fire:				{x:15, y:10}
 			}
 			
 			var gearInfo =
 			{
 				NoGear: {
 					name: "None",
-					desc: "\"Unused gear slot.\"",
+					desc: "Unused gear slot.",
 					cost: 0
 				},
 				Torch: {
 					name: "Torch",
-					desc: "\"Stun adjacent monsters for 5 rounds.\"",
+					desc: "Stun adjacent monsters for 5 rounds.",
 					cost: 15,
 					use: function() {
 						stunMonsterInPosition(playerY + 1, playerX, 5);
@@ -95,17 +100,190 @@
 						stunMonsterInPosition(playerY, playerX - 1, 5);
 					}
 				},
+				Flamethrower: {
+					name: "Flamethrower",
+					desc: "Create a slow-moving fireball ahead of you that deters monsters and spreads to trees.",
+					cost: 20,
+					use: function() {
+						//If player hasn't moved or didn't move last turn, we can't use direction-based attacks.
+						if ((playerMoveHistory.length == 0) 
+						|| 
+						(
+							(playerMoveHistory[playerMoveHistory.length - 1][0] == 0) 
+							&& (playerMoveHistory[playerMoveHistory.length - 1][1] == 0))
+						)
+						{
+							numCoins += this.cost;
+							return;
+						}
+						
+						var mostRecentMove = playerMoveHistory[playerMoveHistory.length - 1];
+						
+						var locationToTest = 
+							[playerX + mostRecentMove[0], 
+							playerY + mostRecentMove[1]];
+							
+						if (locationToTest[0] < 0)
+						{
+							locationToTest[0] += map.length;
+						}
+						else if (locationToTest[0] >= map.length)
+						{
+							locationToTest[0] -= map.length;
+						}
+						if (locationToTest[1] < 0)
+						{
+							locationToTest[1] += map.length;
+						}
+						else if (locationToTest[1] >= map.length)
+						{
+							locationToTest[1] -= map.length;
+						}
+						
+						var testLocationContents = map[locationToTest[1]][locationToTest[0]];
+						
+						if (moveableTileNames.includes(testLocationContents) || testLocationContents.includes("Tree") ||
+						monsterNames.includes(testLocationContents.replace(/\$/g, "").replace(/\*/g, "")))
+						{
+							map[locationToTest[1]][locationToTest[0]] = "Fire" + parseInt(mostRecentMove[1]+1) + parseInt(mostRecentMove[0]+1) + "*"; //add 1 to avoid negatives, double digits, (-1) make substring parsing more complex
+						}
+						else
+						{
+							numCoins += this.cost;
+							return;
+						}
+					}
+				},
 				Cloak: {
 					name: "Cloak",
-					desc: "\"Teleport to a random empty space.\"",
-					cost: 20,
-					use: function() {alert("Used the Cloak!");}
+					desc: "Stun all monsters for 3 rounds.",
+					cost: 45,
+					use: function() {
+						for (let i = 0; i < map.length; i++)
+						{
+							for (let j = 0; j < map.length; j++)
+							{
+								if (monsterNames.includes(map[i][j].replace(/\$/g, "").replace(/\*/g, "")))
+								{
+									stunMonsterInPosition(i, j, 3);
+								}
+							}
+						}
+					}
+				},
+				Bomb: {
+					name: "Bag of Bombs",
+					desc: "Destroy everything in a 3-tile radius.",
+					cost: 70,
+					use: function() {
+						for (let i = playerY - 3; i <= playerY + 3; i++)
+						{
+							for (let j = playerX - 3; j <= playerX + 3; j++)
+							{
+								if (Math.abs(i - playerY) + Math.abs(j - playerX) <= 3)
+								{
+									var destroyI = i;
+									if (destroyI < 0)
+									{
+										destroyI += map.length;
+									}
+									else if (destroyI >= map.length)
+									{
+										destroyI -= map.length;
+									}
+									var destroyJ = j;
+									if (destroyJ < 0)
+									{
+										destroyJ += map.length;
+									}
+									else if (destroyJ >= map.length)
+									{
+										destroyJ -= map.length;
+									}
+									if (map[destroyI][destroyJ] != "Player")
+									{
+										map[destroyI][destroyJ] = "Empty";
+									}
+								}
+							}
+						}
+					}
+				},
+				Crossbow: {
+					name: "Crossbow",
+					desc: "Stun a monster along a clear path directly ahead of you for 15 rounds.",
+					cost: 10,
+					use: function() {
+						//If player hasn't moved or didn't move last turn, we can't use direction-based attacks.
+						if ((playerMoveHistory.length == 0) 
+						|| 
+						(
+							(playerMoveHistory[playerMoveHistory.length - 1][0] == 0) 
+							&& (playerMoveHistory[playerMoveHistory.length - 1][1] == 0))
+						)
+						{
+							numCoins += this.cost;
+							return;
+						}
+						
+						var mostRecentMove = playerMoveHistory[playerMoveHistory.length - 1];
+						
+						var locationToTest = 
+							[playerX + mostRecentMove[0], 
+							playerY + mostRecentMove[1]];
+							
+						if (locationToTest[0] < 0)
+						{
+							locationToTest[0] += map.length;
+						}
+						else if (locationToTest[0] >= map.length)
+						{
+							locationToTest[0] -= map.length;
+						}
+						if (locationToTest[1] < 0)
+						{
+							locationToTest[1] += map.length;
+						}
+						else if (locationToTest[1] >= map.length)
+						{
+							locationToTest[1] -= map.length;
+						}
+						
+						var testLocationContents = map[locationToTest[1]][locationToTest[0]];
+						
+						while (moveableTileNames.includes(testLocationContents))
+						{
+							locationToTest[0] += mostRecentMove[0];
+							locationToTest[1] += mostRecentMove[1];
+							
+							if (locationToTest[0] < 0)
+							{
+								locationToTest[0] += map.length;
+							}
+							else if (locationToTest[0] >= map.length)
+							{
+								locationToTest[0] -= map.length;
+							}
+							if (locationToTest[1] < 0)
+							{
+								locationToTest[1] += map.length;
+							}
+							else if (locationToTest[1] >= map.length)
+							{
+								locationToTest[1] -= map.length;
+							}
+							
+							testLocationContents = map[locationToTest[1]][locationToTest[0]];
+						}
+						
+						stunMonsterInPosition(locationToTest[1], locationToTest[0], 15);
+					}
 				}
 			}
 			
 			function stunMonsterInPosition(i, j, numTurns)
 			{
-				var possibleMonsterName = map[i][j].replace(/$/g, "");
+				var possibleMonsterName = map[i][j].replace(/\$/g, "");
 				if (monsterNames.includes(possibleMonsterName))
 				{
 					for (let k = 0; k < numTurns; k++)
@@ -121,7 +299,7 @@
 				UIStringArray.push("[" + button + "]");
 				UIStringArray.push(gearInfo[gearEntityName].name);
 				UIStringArray.push("Cost: " +  gearInfo[gearEntityName].cost);
-				UIStringArray.push(gearInfo[gearEntityName].desc);
+				UIStringArray.push("\"" + gearInfo[gearEntityName].desc + "\"");
 				while(UIStringArray[UIStringArray.length - 1].length > 16)
 				{
 					var start = UIStringArray[UIStringArray.length - 1].substring(17, 0); //first 16 characters of last line
@@ -470,11 +648,23 @@
 				
 				var newSpace = map[newPlayerY][newPlayerX];
 				
-				if (moveableTileNames.includes(newSpace))
+				if ((moveableTileNames.includes(newSpace)) || // the new space is a moveable tile
+				( //or
+					(monsterNames.includes(newSpace.replace(/\*/g, "").replace(/\$/g, "")))) //the new space contains a monster
+					&& //and
+					(newSpace.includes("$")) //it's stunned
+				)
 				{
 					playerMoveHistory.push([newX, newY]);
 					
-					map[playerY][playerX] = "Empty";
+					if (moveableTileNames.includes(newSpace))
+					{
+						map[playerY][playerX] = "Empty";
+					}
+					else
+					{
+						map[playerY][playerX] = newSpace;
+					}
 					playerX = newPlayerX;
 					playerY = newPlayerY;
 					map[playerY][playerX] = "Player";
@@ -545,6 +735,86 @@
 						if (monsterNames.includes(mapEntity.replace(/\$/g, "").replace(/\*/, "")))
 						{
 							moveMonster(map[i][j], i, j);
+						}
+						else if (mapEntity.includes("Fire"))
+						{
+							if (mapEntity.includes("*")) //if this is the first round that the fireball has existed, don't move it
+							{
+								map[i][j] = map[i][j].replace("*", "");
+							}
+							else
+							{
+								//burn down adjacent trees
+								var adjacentCoordinates =
+								[
+									[0, 1],
+									[0, -1],
+									[1, 0],
+									[-1, 0]
+								]
+								for (let k = 0; k < adjacentCoordinates.length; k++)
+								{
+									var targetI = i + adjacentCoordinates[k][0];
+									if (targetI < 0)
+									{
+										targetI += map.length;
+									}
+									else if (targetI >= map.length)
+									{
+										targetI -= map.length;
+									}
+									var targetJ = j + adjacentCoordinates[k][1];
+									if (targetJ < 0)
+									{
+										targetJ += map.length;
+									}
+									else if (targetJ >= map.length)
+									{
+										targetJ -= map.length;
+									}
+									var possibleTreeEntity = map[targetI][targetJ];
+									if (map[targetI][targetJ].includes("Tree"))
+									{
+										// If this space hasn't been processed yet, make sure it doesn't try to move/spread
+										map[targetI][targetJ] = "Fire11*"
+									}
+								}
+								
+								var fireDestination_i = i + parseInt(mapEntity.substring(4,5)) - 1;
+								if (fireDestination_i < 0)
+								{
+									fireDestination_i += map.length;
+								}
+								else if (fireDestination_i >= map.length)
+								{
+									fireDestination_i -= map.length;
+								}
+								var fireDestination_j = j + parseInt(mapEntity.substring(5,6)) - 1;
+								if (fireDestination_j < 0)
+								{
+									fireDestination_j += map.length;
+								}
+								else if (fireDestination_j >= map.length)
+								{
+									fireDestination_j -= map.length;
+								}
+								var targetEntity = map[fireDestination_i][fireDestination_j];
+								
+								if (targetEntity == "Player")
+								{
+									monsterEatsPlayer("Fire", fireDestination_i, fireDestination_j);
+								}
+								else if (targetEntity.includes("Tree"))
+								{
+									map[fireDestination_i][fireDestination_j] = "Fire11";
+								}
+								else if ((moveableTileNames.includes(targetEntity)) 
+								|| (monsterNames.includes(targetEntity.replace(/\$/g, "").replace(/\*/g, ""))))
+								{
+									map[fireDestination_i][fireDestination_j] = map[i][j] + "*";
+								}
+								map[i][j] = "Empty";
+							}
 						}
 					}
 				}
@@ -809,6 +1079,11 @@
 					{
 						var stunned = false;
 						var entityNameToDraw = map[i][j].replace(/\$/g, "").replace(/\*/g, "");
+						
+						if (entityNameToDraw.includes("Fire"))
+						{
+							entityNameToDraw = "Fire";
+						}
 						
 						if (map[i][j].includes("$"))
 						{
