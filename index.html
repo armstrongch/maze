@@ -40,8 +40,26 @@
 				gear[1] = "Cloak";
 				gear[2] = "Crossbow";
 				numCoins = 100;
+				messagePrinter.setMessage("TEST!");
+				
 				drawCanvas(map);
 			}
+			
+			var messagePrinter =
+			{
+				setMessage: function(message)
+				{
+					this.messageSet = true;
+					this.messageText = message;
+				},
+				messageSet: false,
+				messageText: "",
+				printMessage: function()
+				{
+					alert(this.messageText);
+					this.messageSet = false;
+				}
+			};
 			
 			var tilePositions = 
 			{
@@ -320,8 +338,6 @@
 			
 			var monsterNames = [
 					"Ghost",
-					"Crocodile",
-					"Ghost",
 					"Crocodile"/*,
 					"Scorpian",
 					"Skeleton",
@@ -333,10 +349,10 @@
 			
 			function generateMonsterName()
 			{
-				monsterNames.push(monsterNames.pop());
-				return monsterNames[0];
-				//var randInt = Math.floor(Math.random() * monsterNames.length);
-				//return monsterNames[randInt];
+				var generatedMonsterName = monsterNames[0];
+				monsterNames.push(monsterNames.shift());
+				console.log("Generated: " + generatedMonsterName);
+				return generatedMonsterName;
 			}
 			
 			var tileMapImg = new Image();
@@ -1177,7 +1193,12 @@
 					}
 					newlines++;
 				}
-
+				
+				if (messagePrinter.messageSet)
+				{
+					messagePrinter.printMessage();
+				}
+				
 			}
 			
 			function shuffle(array) { //from: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
