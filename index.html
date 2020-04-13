@@ -94,10 +94,10 @@
 					desc: "Stun adjacent monsters for 5 rounds.",
 					cost: 15,
 					use: function() {
-						stunMonsterInPosition(playerY + 1, playerX, 5);
-						stunMonsterInPosition(playerY - 1, playerX, 5);
-						stunMonsterInPosition(playerY, playerX + 1, 5);
-						stunMonsterInPosition(playerY, playerX - 1, 5);
+						stunMonsterInPosition(playerY + 1, playerX, 6);
+						stunMonsterInPosition(playerY - 1, playerX, 6);
+						stunMonsterInPosition(playerY, playerX + 1, 6);
+						stunMonsterInPosition(playerY, playerX - 1, 6);
 					}
 				},
 				Flamethrower: {
@@ -165,7 +165,7 @@
 							{
 								if (monsterNames.includes(map[i][j].replace(/\$/g, "").replace(/\*/g, "")))
 								{
-									stunMonsterInPosition(i, j, 3);
+									stunMonsterInPosition(i, j, 4);
 								}
 							}
 						}
@@ -276,7 +276,7 @@
 							testLocationContents = map[locationToTest[1]][locationToTest[0]];
 						}
 						
-						stunMonsterInPosition(locationToTest[1], locationToTest[0], 15);
+						stunMonsterInPosition(locationToTest[1], locationToTest[0], 16);
 					}
 				}
 			}
@@ -319,20 +319,24 @@
 			];
 			
 			var monsterNames = [
-					"Scorpian",
 					"Ghost",
+					"Crocodile",
+					"Ghost",
+					"Crocodile"/*,
+					"Scorpian",
 					"Skeleton",
 					"Ogre",
 					"Squid",
-					"Crocodile",
 					"Bear",
-					"Knight"
+					"Knight"*/
 				];
 			
 			function generateMonsterName()
 			{
-				var randInt = Math.floor(Math.random() * monsterNames.length);
-				return monsterNames[randInt];
+				monsterNames.push(monsterNames.pop());
+				return monsterNames[0];
+				//var randInt = Math.floor(Math.random() * monsterNames.length);
+				//return monsterNames[randInt];
 			}
 			
 			var tileMapImg = new Image();
