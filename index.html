@@ -13,6 +13,7 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js" type="text/javascript"></script>
 		<script type="text/javascript">	
 			
+			var longString = "                                                                      ";
 			var testMode = false;
 			function setupTestMode()
 			{
@@ -27,13 +28,20 @@
 			
 			var messagePrinter =
 			{
+				messageSet: false,
+				messageText: "",
 				setMessage: function(message)
 				{
 					this.messageSet = true;
 					this.messageText = message;
+					this.closeMessageFunction = this.defaultCloseMessageFunction;
 				},
-				messageSet: false,
-				messageText: "",
+				setMessageFunction: function(message, newFunction)
+				{
+					this.messageSet = true;
+					this.messageText = message;
+					this.closeMessageFunction = newFunction;
+				},
 				printMessage: function()
 				{
 					var MessageBoxStringArray = getMessageBoxString(this.messageText);
@@ -75,13 +83,14 @@
 					}
 					newlines++;
 				},
-				closeMessageFunction: function(keyCode)
+				defaultCloseMessageFunction: function(keyCode)
 				{
 					if (keyCode != "Space")
 					{
 						this.setMessage(this.messageText);
 					}
-				}
+				},
+				closeMessageFunction: this.defaultCloseMessageFunction
 			};
 			
 			var tilePositions = 
@@ -120,8 +129,19 @@
 				Crossbow:			{x:6, y:27},
 				Bomb:				{x:13, y:31},
 				Flamethrower:		{x:10, y:31},
-				Fire:				{x:15, y:10}
+				Fire:				{x:15, y:10},
+				BluePotion:			{x:16, y:25},
 			}
+			
+			var gearNames =
+			[
+				"Torch",
+				"Flamethrower",
+				"Cloak",
+				"Bomb",
+				"Crossbow"/*,
+				"BluePotion"*/
+			];
 			
 			var gearInfo =
 			{
@@ -688,8 +708,42 @@
 				}
 			}
 			
+			
+			
 			function getChest()
 			{
+				var randInt = Math.floor(Math.random() * gearNames.length);
+				var gearEntityName = gearNames[randInt];
+				var newGear = gearInfo[gearEntityName];
+				var gearName = newGear.name;
+				
+				var gearMessage = "You found a " + gearName + "!" + longString;
+				gearMessage += "Cost: " + newGear.cost + " coins" + longString;
+				gearMessage += "\"" + newGear.desc + "\"" + longString;
+				gearMessage += "Press \"A\", \"S\", or \"D\" to take the " + gearName + ", replacing any existing gear in that slot. Press space to scrap it for 10 coins.";
+				
+				var pickupGear = function (keycode)
+				{
+					switch(keycode)
+					{
+						case "Space":
+							numCoins += 10;
+							break;
+						case "KeyA":
+							gear[0] = gearEntityName;
+							break;
+						case "KeyS":
+							gear[1] = gearEntityName;
+							break;
+						case "KeyD":
+							gear[2] = gearEntityName;
+							break;
+						default:
+							messagePrinter.setMessageFunction(messagePrinter.messageText, messagePrinter.closeMessageFunction);
+					}
+				};
+				
+				messagePrinter.setMessageFunction(gearMessage, pickupGear);
 				console.log("Got a chest!");
 			}
 			
@@ -1133,10 +1187,19 @@
 			
 			function monsterEatsPlayer(monsterName, i, j)
 			{
-				if (testMode)
+				var message = "You were eaten by a " + monsterName + ". Press space to try again.";
+				var reloadFunction = function(keyCode)
 				{
-					alert("You were eaten by a " + monsterName + "!");
+					if (keyCode != "Space")
+					{
+						this.setMessageFunction(this.messageText, this.closeMessageFunction);
+					}
+					else
+					{
+						location.reload();
+					}
 				}
+				messagePrinter.setMessageFunction(message, reloadFunction);
 			}
 			
 			function drawCanvas(map)
