@@ -14,17 +14,6 @@
 		<script type="text/javascript">	
 			
 			var longString = "                                                                      ";
-			var testMode = false;
-			function setupTestMode()
-			{
-				testMode = true;
-				gear[0] = "Flamethrower";
-				gear[1] = "Cloak";
-				gear[2] = "Bomb";
-				
-				numCoins = 100;
-				drawCanvas(map);
-			}
 			
 			var messagePrinter =
 			{
@@ -204,7 +193,7 @@
 				},
 				Flamethrower: {
 					name: "Flamethrower",
-					desc: "Create a slow-moving fireball ahead of you that deters monsters and spreads to trees.",
+					desc: "Create a slow-moving fireball ahead of you (DIRECTION) that deters monsters and spreads to trees.",
 					cost: 20,
 					use: function() {
 						//If player hasn't moved or didn't move last turn, we can't use direction-based attacks.
@@ -313,7 +302,7 @@
 				},
 				Crossbow: {
 					name: "Crossbow",
-					desc: "Stun a monster along a clear path directly ahead of you for 15 rounds.",
+					desc: "Stun a monster along a clear path directly ahead of you (DIRECTION) for 15 rounds.",
 					cost: 10,
 					use: function() {
 						//If player hasn't moved or didn't move last turn, we can't use direction-based attacks.
@@ -397,11 +386,42 @@
 			
 			function getGearUIString(gearEntityName, button)
 			{
+				var playerDirection;
+				if ((playerMoveHistory.length == 0) 
+				|| 
+				(
+					(playerMoveHistory[playerMoveHistory.length - 1][0] == 0) 
+					&& (playerMoveHistory[playerMoveHistory.length - 1][1] == 0))
+				)
+				{
+					playerDirection = "";
+				}
+				else
+				{
+					var mostRecentMove = playerMoveHistory[playerMoveHistory.length - 1];
+					if (mostRecentMove[0] == -1)
+					{
+						playerDirection = "(North)";
+					}
+					else if (mostRecentMove[0] == 1)
+					{
+						playerDirection = "(South)";
+					}
+					else if (mostRecentMove[1] == -1)
+					{
+						playerDirection = "(West)";
+					}
+					else
+					{
+						playerDirection = "(East)";
+					}
+				}
+				
 				var UIStringArray = [];
 				UIStringArray.push("[" + button + "]");
 				UIStringArray.push(gearInfo[gearEntityName].name);
 				UIStringArray.push("Cost: " +  gearInfo[gearEntityName].cost);
-				UIStringArray.push("\"" + gearInfo[gearEntityName].desc + "\"");
+				UIStringArray.push("\"" + gearInfo[gearEntityName].desc.replace("(DIRECTION)", playerDirection) + "\"");
 				while(UIStringArray[UIStringArray.length - 1].length > 16)
 				{
 					var start = UIStringArray[UIStringArray.length - 1].substring(17, 0); //first 16 characters of last line
@@ -728,10 +748,6 @@
 						}
 					}
 				);
-				
-				//Test
-				//setupTestMode();
-				//Test
 			}
 			
 			function useGear(gearName)
@@ -760,7 +776,7 @@
 				
 				var gearMessage = "You found a " + gearName + "!" + longString;
 				gearMessage += "Cost: " + newGear.cost + " coins" + longString;
-				gearMessage += "\"" + newGear.desc + "\"" + longString;
+				gearMessage += "\"" + newGear.desc.replace("(DIRECTION) ", "") + "\"" + longString;
 				gearMessage += "Press \"A\", \"S\", or \"D\" to take the " + gearName + ", replacing any existing gear in that slot. Press space to scrap it for 10 coins.";
 				
 				var pickupGear = function (keycode)
