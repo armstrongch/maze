@@ -17,31 +17,10 @@
 			function setupTestMode()
 			{
 				testMode = true;
-				/*var counter = 0;
-				for (let i = 0; i < map.length; i++)
-				{
-					for (let j = 0; j < map.length; j++)
-					{
-						if (monsterNames.includes(map[i][j]))
-						{
-							if (counter % 2 == 0)
-							{
-								map[i][j] = "Crocodile";
-							}
-							else
-							{
-								map[i][j] = "Ghost";
-							}
-							counter++;
-						}
-					}
-				}*/
 				gear[0] = "Flamethrower";
 				gear[1] = "Cloak";
 				gear[2] = "Crossbow";
 				numCoins = 100;
-				messagePrinter.setMessage("TEST!");
-				
 				drawCanvas(map);
 			}
 			
@@ -56,8 +35,44 @@
 				messageText: "",
 				printMessage: function()
 				{
-					alert(this.messageText);
-					this.messageSet = false;
+					var MessageBoxStringArray = getMessageBoxString(this.messageText);
+					var messageBoxXStartTile = 3;
+					var messageBoxYStartTile = 4;
+					var messageBoxHeight = Math.max(Math.ceil(MessageBoxStringArray.length*0.62), 3);
+					
+					
+					for (let i = messageBoxXStartTile; i < map.length - messageBoxXStartTile; i++)
+					{
+						for (let j = messageBoxYStartTile; j < messageBoxYStartTile + messageBoxHeight; j++)
+						{
+							ctx.drawImage(
+								tileMapImg,
+								tilePositions["Empty"].x*(tileSize + 2),
+								tilePositions["Empty"].y*(tileSize + 2),
+								tileSize, tileSize,
+								i*tileSize,
+								j*tileSize,
+								tileSize, tileSize
+							);
+						}
+					}
+					
+					ctx.lineWidth = 4;
+					ctx.beginPath();
+					ctx.rect(messageBoxXStartTile*tileSize + 8, messageBoxYStartTile*tileSize + 8, (map.length-6)*tileSize - 16, messageBoxHeight*tileSize - 16);
+					ctx.stroke();
+					
+					ctx.font = "16px Courier";
+					var messageX = messageBoxXStartTile*tileSize + 16;
+					var messageY = messageBoxYStartTile*tileSize + 16;
+					
+					var newlines = 0;
+					for (let j = 0; j < MessageBoxStringArray.length; j++)
+					{
+						ctx.fillText(MessageBoxStringArray[j], messageX + 4, messageY + 16 + newlines*16);
+						newlines++;
+					}
+					newlines++;
 				}
 			};
 			
@@ -329,6 +344,21 @@
 				return UIStringArray;
 			}
 			
+			function getMessageBoxString(messageText)
+			{
+				var MessageBoxStringArray = [];
+				MessageBoxStringArray.push(messageText);
+				while(MessageBoxStringArray[MessageBoxStringArray.length - 1].length > 66)
+				{
+					var start = MessageBoxStringArray[MessageBoxStringArray.length - 1].substring(67, 0); //first 16 characters of last line
+					var lastSpaceIndex = start.lastIndexOf(" "); //the index of the last space character in the first 17 characters
+					var newLine = MessageBoxStringArray[MessageBoxStringArray.length - 1].substring(lastSpaceIndex);
+					MessageBoxStringArray[MessageBoxStringArray.length - 1] = MessageBoxStringArray[MessageBoxStringArray.length - 1].substring(0, lastSpaceIndex);
+					MessageBoxStringArray.push(newLine.trim());
+				}
+				return MessageBoxStringArray;
+			}
+			
 			var moveableTileNames = [
 				"Coin",
 				"Chest",
@@ -576,6 +606,8 @@
 			
 			function startGame()
 			{
+				messagePrinter.setMessage("Welcome, Wanderer. Use the arrow keys to move. Use items with \"A\", \"S\", and \"S\". Collect coins and avoid monsters. Press any key to continue.");
+				
 				gameCanvas.width = (mapSize + 6)*tileSize;
 				gameCanvas.height = mapSize*tileSize;
 				
@@ -588,7 +620,12 @@
 				
 				document.addEventListener('keydown', (e) => 
 					{
-						if (playerTurn)
+						if (messagePrinter.messageSet)
+						{
+							messagePrinter.messageSet = false;
+							drawCanvas(map);
+						}
+						else if (playerTurn)
 						{
 							if (e.code === "ArrowUp")
 							{
@@ -1195,6 +1232,10 @@
 					}
 					newlines++;
 				}
+				
+				//Draw Message from messagePrinter
+				
+				
 				
 				if (messagePrinter.messageSet)
 				{
