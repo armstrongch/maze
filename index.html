@@ -93,11 +93,37 @@
 				closeMessageFunction: this.defaultCloseMessageFunction
 			};
 			
+			function getRandomInstancePosition(entityName)
+			{
+				var instances = [];
+						
+				for (let i = 0; i < map.length; i++)
+				{
+					for (let j = 0; j < map.length; j++)
+					{
+						if (map[i][j] == entityName)
+						{
+							instances.push({iPos: i, jPos: j});
+						}
+					}
+				}
+				if (instances.length == 0)
+				{
+					return {iPos: -1, jPos: -1};
+				}
+				else
+				{
+					var randInt = Math.floor(Math.random() * instances.length);
+					return instances[randInt];
+				}
+			}
+			
 			var tilePositions = 
 			{
 				Tree1: 				{x:0, y:1},
 				Tree2: 				{x:1, y:1},
 				Tree3: 				{x:2, y:1},
+				Tree4: 				{x:3, y:1},
 				Tree4: 				{x:3, y:1},
 				Tree5: 				{x:4, y:1},
 				Tree6: 				{x:5, y:1},
@@ -139,8 +165,8 @@
 				"Flamethrower",
 				"Cloak",
 				"Bomb",
-				"Crossbow"/*,
-				"BluePotion"*/
+				"Crossbow",
+				"BluePotion"
 			];
 			
 			var gearInfo =
@@ -159,6 +185,21 @@
 						stunMonsterInPosition(playerY - 1, playerX, 6);
 						stunMonsterInPosition(playerY, playerX + 1, 6);
 						stunMonsterInPosition(playerY, playerX - 1, 6);
+					}
+				},
+				BluePotion: {
+					name: "Blue Potion",
+					desc: "Transform a random chest into a monster. Gain 25 coins.",
+					cost: 0,
+					use: function() {
+						var randomChestLocation = getRandomInstancePosition("Chest");
+						
+						if (randomChestLocation.iPos != -1)
+						{
+							var newMonsterName = generateMonsterName();
+							map[randomChestLocation.iPos][randomChestLocation.jPos] = newMonsterName;
+							numCoins += 25;
+						}
 					}
 				},
 				Flamethrower: {
