@@ -19,7 +19,8 @@
 				testMode = true;
 				gear[0] = "Flamethrower";
 				gear[1] = "Cloak";
-				gear[2] = "Crossbow";
+				gear[2] = "Bomb";
+				
 				numCoins = 100;
 				drawCanvas(map);
 			}
@@ -73,6 +74,13 @@
 						newlines++;
 					}
 					newlines++;
+				},
+				closeMessageFunction: function(keyCode)
+				{
+					if (keyCode != "Space")
+					{
+						this.setMessage(this.messageText);
+					}
 				}
 			};
 			
@@ -606,7 +614,7 @@
 			
 			function startGame()
 			{
-				messagePrinter.setMessage("Welcome, Wanderer. Use the arrow keys to move. Use items with \"A\", \"S\", and \"S\". Collect coins and avoid monsters. Press any key to continue.");
+				messagePrinter.setMessage("Welcome, Wanderer. Use the arrow keys to move. Use items with \"A\", \"S\", and \"D\". Collect coins and avoid monsters. Press space to continue.");
 				
 				gameCanvas.width = (mapSize + 6)*tileSize;
 				gameCanvas.height = mapSize*tileSize;
@@ -623,6 +631,7 @@
 						if (messagePrinter.messageSet)
 						{
 							messagePrinter.messageSet = false;
+							messagePrinter.closeMessageFunction(e.code);
 							drawCanvas(map);
 						}
 						else if (playerTurn)
@@ -660,7 +669,7 @@
 				);
 				
 				//Test
-				setupTestMode();
+				//setupTestMode();
 				//Test
 			}
 			
@@ -1232,11 +1241,7 @@
 					}
 					newlines++;
 				}
-				
-				//Draw Message from messagePrinter
-				
-				
-				
+	
 				if (messagePrinter.messageSet)
 				{
 					messagePrinter.printMessage();
